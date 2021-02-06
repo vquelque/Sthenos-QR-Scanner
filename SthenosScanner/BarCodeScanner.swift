@@ -16,8 +16,7 @@ struct BarCodeScanner : UIViewControllerRepresentable {
     @Binding var user: User?
     @Binding var fetching: Bool
     @Binding var isPresented: Bool
-    @Binding var userNotFound: Bool
-    @Binding var showAlert: Bool
+    @Binding var alertId: AlertID?
     
     @Environment(\.presentationMode) private var presentationMode
     
@@ -111,14 +110,13 @@ struct BarCodeScanner : UIViewControllerRepresentable {
                     let err = error?._code
                     if (err == 403) {
                         print("user does not exist")
-                        self.parent.userNotFound = true
+                        self.parent.alertId = AlertID(id: .userNotFound)
                         self.parent.fetching = false
                     } else {
                         print("API Error")
-                        self.parent.userNotFound = false
+                        self.parent.alertId = AlertID(id: .otherError)
                         self.parent.fetching = false
                     }
-                    self.parent.showAlert = true
                 }
             }
         }

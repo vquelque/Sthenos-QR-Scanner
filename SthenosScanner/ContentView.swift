@@ -7,14 +7,22 @@
 
 import SwiftUI
 
+struct AlertID: Identifiable {
+    var id: AlertType
+    
+    enum AlertType {
+        case userNotFound
+        case otherError
+    }
+}
+
 struct ContentView: View {
     
     @Environment(\.scenePhase) var scenePhase
     
     @State private var QRScannerisPresented: Bool = false
+    @State private var alertId: AlertID?
     @State private var fetching = false
-    @State private var showAlert: Bool = false
-    @State private var userNotFound: Bool = false
     @State private var userID: String?
     @State private var user: User?
     
@@ -50,12 +58,11 @@ struct ContentView: View {
                             self.QRScannerisPresented = true
                         }
                 }
-            }).alert(isPresented: $showAlert) {
-                let alertText = userNotFound ? "User does not exist !" : "API Error"
-                return Alert(title: Text(alertText))
+            }).alert(item: $alertId) {(alertId) -> Alert in
+                return createAlert(alertId: alertId)
             }
         }.sheet(isPresented: $QRScannerisPresented) {
-            BarCodeScanner(userID:$userID, user:$user, fetching: $fetching, isPresented: $QRScannerisPresented, userNotFound: $userNotFound, showAlert: $showAlert)
+            BarCodeScanner(userID:$userID, user:$user, fetching: $fetching, isPresented: $QRScannerisPresented, alertId:$alertId)
         }.onChange(of: scenePhase) { newScenePhase in
             switch newScenePhase {
             case .active:
@@ -75,7 +82,18 @@ struct ContentView: View {
         }
             
     }
+    
+    private func createAlert(alertId: AlertID) -> Alert {
+        switch alertId.id {
+            case .userNotFound:
+                return Alert(title: Text("L'utilistateur n'existe pas"))
+            case .otherError:
+                return Alert(title: Text("Erreur API"))
+            }
+        }
 }
+
+
 
 #if DEBUG
 struct ContentView_Previews: PreviewProvider {
