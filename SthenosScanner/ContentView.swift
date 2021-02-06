@@ -9,14 +9,14 @@ import SwiftUI
 
 struct ContentView: View {
     
-    @State private var isPresented = false
+    @Environment(\.scenePhase) var scenePhase
+    
+    @State private var QRScannerisPresented: Bool = false
     @State private var fetching = false
     @State private var showAlert: Bool = false
     @State private var userNotFound: Bool = false
     @State private var userID: String?
     @State private var user: User?
-
-
     
     var body: some View {
         
@@ -47,16 +47,29 @@ struct ContentView: View {
                 }
                 ToolbarItem(placement: .navigationBarTrailing){
                     Button("Scan") {
-                            self.isPresented = true
+                            self.QRScannerisPresented = true
                         }
                 }
             }).alert(isPresented: $showAlert) {
                 let alertText = userNotFound ? "User does not exist !" : "API Error"
                 return Alert(title: Text(alertText))
             }
-        }.sheet(isPresented: $isPresented) {
-            BarCodeScanner(userID:$userID, user:$user, fetching: $fetching, isPresented: $isPresented, userNotFound: $userNotFound, showAlert: $showAlert)
-        }
+        }.sheet(isPresented: $QRScannerisPresented) {
+            BarCodeScanner(userID:$userID, user:$user, fetching: $fetching, isPresented: $QRScannerisPresented, userNotFound: $userNotFound, showAlert: $showAlert)
+        }.onChange(of: scenePhase) { newScenePhase in
+            switch newScenePhase {
+            case .active:
+                //open QR Scanner when app is resumed
+                self.QRScannerisPresented = true
+                return
+            case .background:
+                return
+            case .inactive:
+                return
+            @unknown default:
+              return
+            }
+          }
         } else {
             ProgressView()
         }
